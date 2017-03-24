@@ -41,10 +41,7 @@ test('ste just proxies on and once to hub with helper prefixery', t => {
     dfd2.resolve();
   });
 
-  t.deepEqual(sub, {
-    key: '0',
-    urn: 'foo:bar:leaving/init',
-  });
+  t.deepEqual(sub.urn, 'foo:bar:leaving/init');
 
   ste.set('done', 1234);
 

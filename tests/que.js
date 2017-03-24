@@ -17,7 +17,7 @@ test('QUE gets you back a que instance', t => {
 });
 
 test("optionally you can pass {DEBUG:'DEBUG'} and it'll expose items", t => {
-  t.plan(4);
+  t.plan(5);
 
   const que = new QUE({
     DEBUG: 'DEBUG',
@@ -31,11 +31,8 @@ test("optionally you can pass {DEBUG:'DEBUG'} and it'll expose items", t => {
   let items = que.items();
 
   t.is(items.length, 1);
-  t.deepEqual(items[0], {
-    key: '0',
-    urn: 'foo:bar',
-    args: 1234,
-  });
+  t.deepEqual(items[0].urn, 'foo:bar');
+  t.deepEqual(items[0].args, 1234);
 });
 
 test('you can add shit to the que and remove it... all by urn and key', t => {

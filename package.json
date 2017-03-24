@@ -6,7 +6,9 @@
   "files": [
     "lib/**"
   ],
-  "scripts": {},
+  "scripts": {
+    "test": "ava tests/*"
+  },
   "author": "Nickolas Sharp - Thrivedev",
   "license": "DBAD",
   "devDependencies": {

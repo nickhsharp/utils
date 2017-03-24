@@ -173,10 +173,9 @@ test('hub on returns a key/urn pair that lets you off it', t => {
     }, 1);
   });
 
-  t.deepEqual(sub, {
-    key: '0',
-    urn: 'foo:bar',
-  });
+  t.deepEqual(sub.urn, 'foo:bar');
+
+
 
   hub.emit('foo:bar', data);
 
