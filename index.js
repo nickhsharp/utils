@@ -1,7 +1,6 @@
 "use strict";
 
 module.exports = {
-  ACL: require("./lib/acl.js"),
   B64: require("./lib/b64.js"),
   DFD: require("./lib/dfd.js"),
   DNS: require("./lib/dns.js"),
