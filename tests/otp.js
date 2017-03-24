@@ -3,38 +3,23 @@
 const otp = require('../lib/otp');
 const encrypt = require('../lib/enc');
 const assert = require('assert');
+const sinon = require('sinon');
 const test = require('ava');
-
-const VALID_PUBLIC_KEY = {
-  Plaintext: `-----BEGIN PUBLIC KEY-----
-MIGbMA0GCSqGSIb3DQEBAQUAA4GJADCBhQJ+AL47Cpo6r/VnxzFYWHVmnBnvav2K
-dW0sY2Me0qsY07VHs9YXAepXIIFF7EYvLSlJA1Y1gLmqDGJLXuJSbxUDATjjTxke
-1acKf/lQtWyb3HXcBPiU3FCQCta9Leda0QKCiii3CEJHL/3NSKgE/gxUf0XPPk8y
-VFz6Z6vCthJjAgMBAAE=
------END PUBLIC KEY-----
-`,
-};
-
-const VALID_PRIVATE_KEY = {
-  Plaintext: `-----BEGIN RSA PRIVATE KEY-----
-MIICTAIBAAJ+AL47Cpo6r/VnxzFYWHVmnBnvav2KdW0sY2Me0qsY07VHs9YXAepX
-IIFF7EYvLSlJA1Y1gLmqDGJLXuJSbxUDATjjTxke1acKf/lQtWyb3HXcBPiU3FCQ
-Cta9Leda0QKCiii3CEJHL/3NSKgE/gxUf0XPPk8yVFz6Z6vCthJjAgMBAAECfQi+
-5CTlD9PjeoftPNvg5MpYdH3FkNJ9GPCkqSDOmmUaL81m72KbsNXgphUv9A6S2cFr
-4kgm5jzapDkZexvnLzFSivt+izmKhRlKmrIQ6Zb+gIa5Le2PtP/IYMZ4N/JkF504
-RTZuVdq/bEGWEpjIaiBNoNUiVDq9A52v4gYZAj8OTo2NHocFuIOy+uZ0Uo4nSjXL
-Hzlh13qb3o89eQtofs/k7l7tYV+KPCJjm+ljz5EEHO1GBmPnlvz7fo3WRNUCPw1L
-5b9tQFJuVfn01tdDYUH3N8/g2/mwFlIKKPa7NETcvOz/N93QYATTURYSSEdS2oOu
-IQChlMmidCx6ZcD2VwI/DQcCZenSUSc+5Q8KIgm6X5R3f0ojWjB3+M6j5/n8pV4z
-t+ZGkikEcj9noQQrdTNgfTpJ5GWVOyCFpAwM43sxAj8EeLnTHtK65hBT91spGafj
-n1hNuLlBx046WOBd2adCYVnH+iy3lBQ2izqBybQ1CFAkaLMAm1aGWPPo4WDG/BEC
-PwFKz5nFQc+lpS2uuECeZgaRbHIhqXG4qv+etBqrAAuUw3AOG7UOdWaea2kmgZJL
-IpMLlNRBV1p4E8bL4f2U9g==
------END RSA PRIVATE KEY-----
-`,
-};
+const fs = require('fs');
 
 test.beforeEach(t => {
+  t.context.privateKey = fs.readFileSync(`${__dirname}/keys/test_rsa`, {
+    encoding: 'utf8',
+  });
+
+  t.context.publicKey = fs.readFileSync(`${__dirname}/keys/test_rsa.pub`, {
+    encoding: 'utf8',
+  });
+
+  t.context.invalidPublicKey = fs.readFileSync(`${__dirname}/keys/invalid_rsa.pub`, {
+    encoding: 'utf8',
+  });
+
   process.env.NODE_ENV = 'test';
 });
 
@@ -57,29 +42,29 @@ test('Test TOTtoken using test vectors from TOTtoken RFcounter.', t => {
   let token = 'windowILLNOTtokenASS';
   assert.ok(!otp.totp.verify(token, key, opt), 'Should not pass');
 
+  Date.now = sinon.stub().returns(59 * 1000);
   // counterheck for test vector at 59s
-  opt._t = 59 * 1000;
   token = '287082';
   let res = otp.totp.verify(token, key, opt);
   assert.ok(res, 'Should pass');
   assert.equal(res.delta, 0, 'Should be in sync');
 
   // counterheck for test vector at 1234567890
-  opt._t = 1234567890 * 1000;
+  Date.now = sinon.stub().returns(1234567890 * 1000);
   token = '005924';
   res = otp.totp.verify(token, key, opt);
   assert.ok(res, 'Should pass');
   assert.equal(res.delta, 0, 'Should be in sync');
 
   // counterheck for test vector at 1111111109
-  opt._t = 1111111109 * 1000;
+  Date.now = sinon.stub().returns(1111111109 * 1000);
   token = '081804';
   res = otp.totp.verify(token, key, opt);
   assert.ok(res, 'Should pass');
   assert.equal(res.delta, 0, 'Should be in sync');
 
   // counterheck for test vector at 2000000000
-  opt._t = 2000000000 * 1000;
+  Date.now = sinon.stub().returns(2000000000 * 1000);
   token = '279037';
   res = otp.totp.verify(token, key, opt);
   assert.ok(res, 'Should pass');
@@ -118,24 +103,24 @@ test('totp gen', t => {
   otp.totp.gen(key);
 
   // counterheck for test vector at 59s
-  opt._t = 59 * 1000;
+  Date.now = sinon.stub().returns(59 * 1000);
   assert.equal(otp.totp.gen(key, opt), '287082', 'TOTtoken values should match');
 
   // counterheck for test vector at 1234567890
-  opt._t = 1234567890 * 1000;
+  Date.now = sinon.stub().returns(1234567890 * 1000);
   assert.equal(otp.totp.gen(key, opt), '005924', 'TOTtoken values should match');
 
   // counterheck for test vector at 1111111109
-  opt._t = 1111111109 * 1000;
+  Date.now = sinon.stub().returns(1111111109 * 1000);
   assert.equal(otp.totp.gen(key, opt), '081804', 'TOTtoken values should match');
 
   // counterheck for test vector at 2000000000
-  opt._t = 2000000000 * 1000;
+  Date.now = sinon.stub().returns(2000000000 * 1000);
   assert.equal(otp.totp.gen(key, opt), '279037', 'TOTtoken values should match');
 });
 
 test('generateOtpTrio returns an object containing a plaintext and encrypted totpKey', t => {
-  const trio = otp.generateOtpTrio(VALID_PUBLIC_KEY.Plaintext);
+  const trio = otp.generateOtpTrio(t.context.publicKey);
   const isValid = otp.totp.verify(trio.code, trio.plaintextKey);
   t.is(typeof trio, 'object');
   t.is(typeof trio.plaintextKey, 'string');
@@ -145,14 +130,14 @@ test('generateOtpTrio returns an object containing a plaintext and encrypted tot
 });
 
 test('generateOtpTrio returns an encryptedKey that can be decrypted', t => {
-  const trio = otp.generateOtpTrio(VALID_PUBLIC_KEY.Plaintext);
+  const trio = otp.generateOtpTrio(t.context.publicKey);
   t.is(typeof trio.encryptedKey, 'string');
-  const decrypted = encrypt.decrypt(trio.encryptedKey, VALID_PRIVATE_KEY.Plaintext);
+  const decrypted = encrypt.decrypt(trio.encryptedKey, t.context.privateKey);
   t.is(decrypted, trio.plaintextKey);
 });
 
 test('generateOtpTrio generates a code that passes validation', t => {
-  const trio = otp.generateOtpTrio(VALID_PUBLIC_KEY.Plaintext);
+  const trio = otp.generateOtpTrio(t.context.publicKey);
   const isValid = otp.totp.verify(trio.code, trio.plaintextKey);
   const isNotValid = otp.totp.verify(trio.code, trio.encryptedKey);
   t.truthy(isValid);
