@@ -1,0 +1,16 @@
+{
+  "name": "utils",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "files": [
+    "lib/**"
+  ],
+  "scripts": {},
+  "author": "Nickolas Sharp - Thrivedev",
+  "license": "DBAD",
+  "devDependencies": {
+    "ava": "^0.18.1",
+    "sinon": "^2.1.0"
+  }
+}
