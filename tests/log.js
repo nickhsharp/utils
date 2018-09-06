@@ -1,16 +1,106 @@
 "use strict";
 
 const ava = require("ava");
+const sinon = require("sinon");
 const {test, } = ava;
 
 const LOG = require("../lib/log.js");
 
-test("LOG has two functions", t => {
+test.beforeEach((t) => {
+  t.context.log = console.log;
+
+  console.log = sinon.spy();
+});
+
+test.afterEach((t) => {
+  console.log = t.context.log;
+});
+
+test("LOG has four functions", t => {
   t.is(typeof LOG.log, "function");
   t.is(typeof LOG.stringify, "function");
+  t.is(typeof LOG.init, "function");
+  t.is(typeof LOG.wrap, "function");
+});
+
+test("LOG.init sets a global set of meta data for each log", t => {
+  const now = new Date();
+  const clock = sinon.useFakeTimers(now.getTime());
+  
+  LOG.init({
+    foo: "bar"
+  });
+
+  LOG.log("test", "test");
+
+  t.is(console.log.getCalls()[0].args[0], `{"label":"test","ts":${now.getTime()},"meta":{"foo":"bar"},"data":"test"}`);
+
+  clock.restore();
+});
+
+test("LOG.init controls pretty print of output", t => {
+  const now = new Date();
+  const clock = sinon.useFakeTimers(now.getTime());
+  
+  LOG.init({
+    foo: "bar"
+  }, true);
+
+  LOG.log("test", "test");
+
+  t.is(console.log.getCalls()[0].args[0], `{
+  "label": "test",
+  "ts": ${now.getTime()},
+  "meta": {
+    "foo": "bar"
+  },
+  "data": "test"
+}`);
+
+  clock.restore();
+});
+
+test("LOG.wrap gives you a log function that has meta added onto it on top of init", t => {
+  const now = new Date();
+  const clock = sinon.useFakeTimers(now.getTime());
+  
+  LOG.init({
+    foo: "bar"
+  }, true);
+
+  LOG.log("test", "test");
+
+  t.is(console.log.getCalls()[0].args[0], `{
+  "label": "test",
+  "ts": ${now.getTime()},
+  "meta": {
+    "foo": "bar"
+  },
+  "data": "test"
+}`);
+
+  let logger = LOG.wrap({
+    buz: "ber"
+  });
+
+  logger.log("test", "test");
+
+  t.is(console.log.getCalls()[1].args[0], `{
+  "label": "test",
+  "ts": ${now.getTime()},
+  "meta": {
+    "foo": "bar",
+    "buz": "ber"
+  },
+  "data": "test"
+}`);
+
+  clock.restore();
 });
 
 test("LOG.stringify is a safe stringify for circular madness", t => {
+  LOG.init({}, true);
+
   let circularObj = {};
   circularObj.circularRef = circularObj;
   circularObj.list = [ circularObj, circularObj ];
@@ -27,6 +117,8 @@ test("LOG.stringify is a safe stringify for circular madness", t => {
 });
 
 test("LOG.stringify is a safe stringify for circular madness", t => {
+  LOG.init({}, true);
+
   let circularObj = {};
   circularObj.circularRef = circularObj;
   circularObj.list = [ true, circularObj ];
@@ -55,6 +147,8 @@ test("LOG.stringify is a safe stringify for circular madness", t => {
 });
 
 test("LOG.stringify is a safe stringify for circular madness", t => {
+  LOG.init({}, true);
+
   let circularObj = {};
   circularObj.circularRef = circularObj;
   circularObj.list = [ circularObj, circularObj ];
@@ -78,6 +172,8 @@ test("LOG.stringify is a safe stringify for circular madness", t => {
 });
 
 test("LOG.stringify is a safe stringify for circular madness", t => {
+  LOG.init({}, true);
+
   let circularObj = {};
   circularObj.circularRef = circularObj;
   circularObj.list = [ circularObj, circularObj ];
