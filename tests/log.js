@@ -44,7 +44,7 @@ test("LOG.init controls pretty print of output", t => {
   
   LOG.init({
     foo: "bar"
-  }, true);
+  }, null, true);
 
   LOG.log("test", "test");
 
@@ -66,10 +66,9 @@ test("LOG.wrap gives you a log function that has meta added onto it on top of in
   
   LOG.init({
     foo: "bar"
-  }, true);
+  }, null, true);
 
   LOG.log("test", "test");
-
   t.is(console.log.getCalls()[0].args[0], `{
   "label": "test",
   "ts": ${now.getTime()},
@@ -92,14 +91,58 @@ test("LOG.wrap gives you a log function that has meta added onto it on top of in
     "foo": "bar",
     "buz": "ber"
   },
+  "level": "LOG",
   "data": "test"
 }`);
 
   clock.restore();
 });
 
+test("LOG.wrap gives you a fun simple log level shit", t => {
+  const now = new Date();
+  const clock = sinon.useFakeTimers(now.getTime());
+  
+  LOG.init({
+    foo: "bar"
+  }, null, true);
+
+  let logger = LOG.wrap({
+    buz: "ber"
+  }, "WARN");
+
+  logger.log("test", "test");
+
+  t.is(console.log.getCalls()[0].args[0], `{
+  "label": "test",
+  "ts": ${now.getTime()},
+  "meta": {
+    "foo": "bar",
+    "buz": "ber"
+  },
+  "level": "LOG",
+  "data": "test"
+}`);
+
+  logger.warn("test", "test");
+  t.is(console.log.getCalls()[1].args[0], `{
+  "label": "test",
+  "ts": ${now.getTime()},
+  "meta": {
+    "foo": "bar",
+    "buz": "ber"
+  },
+  "level": "WARN",
+  "data": "test"
+}`);
+
+  logger.info("test", "test");
+  t.is(console.log.getCalls().length, 2);
+
+  clock.restore();
+});
+
 test("LOG.stringify is a safe stringify for circular madness", t => {
-  LOG.init({}, true);
+  LOG.init({}, null, true);
 
   let circularObj = {};
   circularObj.circularRef = circularObj;
@@ -117,7 +160,7 @@ test("LOG.stringify is a safe stringify for circular madness", t => {
 });
 
 test("LOG.stringify is a safe stringify for circular madness", t => {
-  LOG.init({}, true);
+  LOG.init({}, null, true);
 
   let circularObj = {};
   circularObj.circularRef = circularObj;
@@ -147,7 +190,7 @@ test("LOG.stringify is a safe stringify for circular madness", t => {
 });
 
 test("LOG.stringify is a safe stringify for circular madness", t => {
-  LOG.init({}, true);
+  LOG.init({}, null, true);
 
   let circularObj = {};
   circularObj.circularRef = circularObj;
@@ -172,7 +215,7 @@ test("LOG.stringify is a safe stringify for circular madness", t => {
 });
 
 test("LOG.stringify is a safe stringify for circular madness", t => {
-  LOG.init({}, true);
+  LOG.init({}, null, true);
 
   let circularObj = {};
   circularObj.circularRef = circularObj;
